@@ -11,7 +11,7 @@ class Committer(object):
 
     @staticmethod
     def git_add_remote_origin(url):
-        subprocess.run(args="git add remote origin " + url)
+        subprocess.run(args="git remote add origin " + url)
 
     @staticmethod
     def git_add_all():
