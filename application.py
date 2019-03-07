@@ -188,10 +188,10 @@ def main():
 
     print(os.chdir("../"))
     # Commit to GitHub
-    Committer.git_init()
+    # Committer.git_init()
     # cloner.clone_all_repos(clone_urls, data, commit=True)
+    # Committer.git_add_remote_origin("https://github.com/martinloesethjensen/python-mandatory.git")
     Committer.git_add_all()
-    Committer.git_add_remote_origin("https://github.com/martinloesethjensen/python-mandatory.git")
     Committer.git_pull()
     Committer.git_commit("Finished mandatory")
     Committer.git_push()
