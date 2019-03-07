@@ -168,45 +168,54 @@ class FileWriter(object):
 
         # Put all the necessary data in the file in a sorted order
         for name, html_url in sorted(names_and_html_urls.items()):
-            file.write("* [" + name[0].upper() + name[1:] + "](" + html_url + ")\n")
+            file.write("* [" + name[0].upper() + name[1:].replace("-", " ") + "](" + html_url + ")\n")
 
         file.close()
 
 
 def main():
+    url = "https://api.github.com/orgs/python-elective-2-spring-2019/repos?per_page=100"
     # Fetches all the data
-    data_fetcher = DataFetcher(url="https://api.github.com/orgs/python-elective-2-spring-2019/repos?per_page=100")
+    print("Fetching all the data from {}".format(url))
+    data_fetcher = DataFetcher(url=url)
+    print("\nSaving all the data to a text file ...")
     data_fetcher.get_data_to_text_file("data.txt")
+    print("\nGetting the necessary data from the text file to a dictionary ...")
     data = data_fetcher.data_from_text_to_dict("data.txt")
     # data = data_fetcher.get_json_data()
+    print("\nGet all the clone urls from the dictionary ...")
     clone_urls = data_fetcher.get_clone_url_list(data)
 
     # Clone all repos to directory
     cloner = Cloner()
+    print("\nCloning all the repos ...")
     cloner.clone_all_repos(clone_urls, data=data)
     #
     # # Get names and html urls
+    print("\nGetting the names and urls from the dictionary ..")
     names_and_html_urls = data_fetcher.get_names_and_html_urls(data)
     #
-    # # Create README.md file
+    # # Create required_reading.md file
+    print("\nCreating required_reading.md file ...")
     FileWriter.write_to_file("required_reading.md", names_and_html_urls)
 
-    print(os.chdir("../"))
+    print("Changing to directory to ./mandatory assignment ... ")
+    os.chdir("../")
     # Commit to GitHub
 
-    print("Initializing a .git in your directory...")
+    print("\nInitializing a .git in your directory ...")
     Committer.git_init()
-    print("Adding submodules for the clone repos...")
+    print("\nAdding submodules for the clone repos ...")
     cloner.clone_all_repos(clone_urls, data, commit=True)
-    print("Add the remote origin to the repo url. It will continue if remote origin already exists... ")
+    print("\nAdd the remote origin to the repo url. It will continue if remote origin already exists... ")
     Committer.git_add_remote_origin("https://github.com/martinloesethjensen/python-mandatory.git")
-    print("Add all files...")
+    print("\nAdd all files ...")
     Committer.git_add_all()
-    message = input("Please write your message be for the commit:\t")
+    message = input("\nCommit changes ...\nPlease write your message for the commit:\t")
     Committer.git_commit(message=message)
-    print("Fetches and pulls changes if there's any changes on the master that you don't have in your directory...")
+    print("\nFetches and pulls changes if there's any changes on the master that you don't have in your directory ...")
     Committer.git_pull()
-    print("Pushing changes...")
+    print("\nPushing changes ...")
     Committer.git_push()
 
 
