@@ -28,7 +28,7 @@ class Committer(object):
 
     @staticmethod
     def git_pull():
-        subprocess.run(args="git pull origin master")
+        subprocess.run(args="git pull --allow-unrelated-histories origin master")
 
 
 class Cloner(object):
