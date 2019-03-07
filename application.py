@@ -27,7 +27,12 @@ class Committer(object):
         subprocess.run(args="git push origin master")
 
     @staticmethod
+    def git_fetch():
+        subprocess.run(args="git fetch origin master")
+
+    @staticmethod
     def git_pull():
+        Committer.git_fetch()
         subprocess.run(args="git pull --allow-unrelated-histories origin master")
 
 
@@ -188,12 +193,20 @@ def main():
 
     print(os.chdir("../"))
     # Commit to GitHub
+
+    print("Initializing a .git in your directory...")
     Committer.git_init()
+    print("Adding submodules for the clone repos...")
     cloner.clone_all_repos(clone_urls, data, commit=True)
+    print("Add the remote origin to the repo url. It will continue if remote origin already exists... ")
     Committer.git_add_remote_origin("https://github.com/martinloesethjensen/python-mandatory.git")
+    print("Add all files...")
     Committer.git_add_all()
-    Committer.git_commit("Finished mandatory")
+    message = input("Please write your message be for the commit:\t")
+    Committer.git_commit(message=message)
+    print("Fetch and pull if there's any changes on the master that you don't have in your directory...")
     Committer.git_pull()
+    print("Push changes...")
     Committer.git_push()
 
 
