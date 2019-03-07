@@ -176,7 +176,7 @@ class FileWriter(object):
 def main():
     # Fetches all the data
     data_fetcher = DataFetcher(url="https://api.github.com/orgs/python-elective-2-spring-2019/repos?per_page=100")
-    # data_fetcher.get_data_to_text_file("data.txt")
+    data_fetcher.get_data_to_text_file("data.txt")
     data = data_fetcher.data_from_text_to_dict("data.txt")
     # data = data_fetcher.get_json_data()
     clone_urls = data_fetcher.get_clone_url_list(data)
@@ -189,7 +189,7 @@ def main():
     names_and_html_urls = data_fetcher.get_names_and_html_urls(data)
     #
     # # Create README.md file
-    FileWriter.write_to_file("README.md", names_and_html_urls)
+    FileWriter.write_to_file("required_reading.md", names_and_html_urls)
 
     print(os.chdir("../"))
     # Commit to GitHub
@@ -204,9 +204,9 @@ def main():
     Committer.git_add_all()
     message = input("Please write your message be for the commit:\t")
     Committer.git_commit(message=message)
-    print("Fetch and pull if there's any changes on the master that you don't have in your directory...")
+    print("Fetches and pulls changes if there's any changes on the master that you don't have in your directory...")
     Committer.git_pull()
-    print("Push changes...")
+    print("Pushing changes...")
     Committer.git_push()
 
 
