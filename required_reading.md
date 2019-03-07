@@ -1,5 +1,5 @@
 ## Required reading
- > Python Elective I Spring 2019
+ > Python Elective II Spring 2019
 
 * [Lesson 01 Introduction to the Python elective](https://github.com/python-elective-2-spring-2019)
 * [Lesson 02 Introduction to Python and Python Strings](https://github.com/python-elective-2-spring-2019/Lesson-01-Introduction-to-the-Python-elective)

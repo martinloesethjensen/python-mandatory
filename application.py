@@ -1,4 +1,3 @@
-import glob
 import json
 import os
 import subprocess
@@ -39,9 +38,17 @@ class Committer(object):
 class Cloner(object):
 
     @staticmethod
-    def clone_repo(clone_url, name, commit=False):
+    def clone_repo(clone_url, name, commit=False, path=None):
         if commit:
             subprocess.run(args="git submodule add " + clone_url)
+        elif path is not None and path is not "":
+            application_dir_path = os.getcwd()
+            os.chdir(path)
+            if os.path.exists("./" + name):
+                Cloner.if_exists(name)
+            else:
+                subprocess.run(args="git clone " + clone_url)
+            os.chdir(application_dir_path)
         elif os.path.exists("./" + name):
             os.chdir(name)
             subprocess.run(args="git pull origin master")
@@ -49,11 +56,35 @@ class Cloner(object):
         else:
             subprocess.run(args="git clone " + clone_url)
 
-    def clone_all_repos(self, clone_urls, data, commit=False):
+    @staticmethod
+    def if_exists(name):
+        os.chdir(name)
+        subprocess.run(args="git pull origin master")
+        os.chdir("../")
+
+    def clone_all_repos(self, clone_urls, data, commit=False, path=None):
         count = 0
         for clone_url in clone_urls:
-            self.clone_repo(clone_url=clone_url, name=data['name'][count], commit=commit)
+            self.clone_repo(clone_url=clone_url, name=data['name'][count], commit=commit, path=path)
             count += 1
+
+    @staticmethod
+    def path_input():
+        path = input(
+            "\nWhere do you want to clone the repos?\n**To clone to current folder just press enter**.\nEnter the whole path: ")
+        folder_ok = 1  # Sentinal for the while loop
+
+        # Continue if path is not chosen
+        if path == "":
+            folder_ok = 0
+
+        # Until a path that exists is being submitted as an input
+        while folder_ok != 0:
+            if os.path.exists(path):
+                folder_ok = 0
+            else:
+                path = input("Folder doesn't exist... Try again: ")
+        return path
 
 
 class DataFetcher(object):
@@ -164,7 +195,7 @@ class FileWriter(object):
         paragraph = FileWriter.get_paragraph("README.md")
 
         # Start of the file:
-        file.write(paragraph + "\n > Python Elective I Spring 2019\n\n")
+        file.write(paragraph + "\n > Python Elective II Spring 2019\n\n")
 
         # Put all the necessary data in the file in a sorted order
         for name, html_url in sorted(names_and_html_urls.items()):
@@ -174,47 +205,68 @@ class FileWriter(object):
 
 
 def main():
-    url = "https://api.github.com/orgs/python-elective-2-spring-2019/repos?per_page=100"
+    ###
     # Fetches all the data
+    ###
+    url = "https://api.github.com/orgs/python-elective-2-spring-2019/repos?per_page=100"
+
     print("Fetching all the data from {}".format(url))
     data_fetcher = DataFetcher(url=url)
+
     print("\nSaving all the data to a text file ...")
     data_fetcher.get_data_to_text_file("data.txt")
+
     print("\nGetting the necessary data from the text file to a dictionary ...")
     data = data_fetcher.data_from_text_to_dict("data.txt")
-    # data = data_fetcher.get_json_data()
+
     print("\nGet all the clone urls from the dictionary ...")
     clone_urls = data_fetcher.get_clone_url_list(data)
+    # data = data_fetcher.get_json_data()
 
+    ###
     # Clone all repos to directory
+    ###
     cloner = Cloner()
-    print("\nCloning all the repos ...")
-    cloner.clone_all_repos(clone_urls, data=data)
-    #
-    # # Get names and html urls
+    path = cloner.path_input() if cloner.path_input() is not "" else os.getcwd()
+    print("\nCloning all the repos in " + path + " ...")
+    cloner.clone_all_repos(clone_urls, data=data, path=path)
+
+    ###
+    # Get names and html urls
+    ###
     print("\nGetting the names and urls from the dictionary ..")
     names_and_html_urls = data_fetcher.get_names_and_html_urls(data)
-    #
-    # # Create required_reading.md file
+
+    ###
+    # Create required_reading.md file
+    ###
     print("\nCreating required_reading.md file ...")
     FileWriter.write_to_file("required_reading.md", names_and_html_urls)
 
     print("Changing to directory to ./mandatory assignment ... ")
     os.chdir("../")
-    # Commit to GitHub
 
+    ###
+    # Commit to GitHub
+    ###
     print("\nInitializing a .git in your directory ...")
     Committer.git_init()
+
     print("\nAdding submodules for the clone repos ...")
     cloner.clone_all_repos(clone_urls, data, commit=True)
-    print("\nAdd the remote origin to the repo url. It will continue if remote origin already exists... ")
+
+    print("\nAdded the remote origin to the repo url. It will continue if remote origin already exists... ")
     Committer.git_add_remote_origin("https://github.com/martinloesethjensen/python-mandatory.git")
-    print("\nAdd all files ...")
+
+    print("\nAdded all files ...")
     Committer.git_add_all()
+
     message = input("\nCommit changes ...\nPlease write your message for the commit:\t")
     Committer.git_commit(message=message)
+
     print("\nFetches and pulls changes if there's any changes on the master that you don't have in your directory ...")
     Committer.git_pull()
+
     print("\nPushing changes ...")
     Committer.git_push()
 
