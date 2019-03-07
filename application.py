@@ -181,18 +181,25 @@ class DataFetcher(object):
 class FileWriter(object):
 
     @staticmethod
-    def get_paragraph(filename):
-        os.chdir("Lesson-01-Introduction-to-the-Python-elective")
-        data = open(filename, "r").read()
-        start = data.find("## Required reading")
-        end = data.find("## Required reading") + len("## Required reading")
+    def get_paragraph(filename, names):
+        global data, start, end
+        for name in names:
+            if os.path.exists("./" + name):
+                os.chdir(name)
+                data = open(filename, "r").read()
+                start = data.find("## Required reading")
+                end = data.find("## Required reading") + len("## Required reading")
+                break
+            else:
+                return "## Couldn't find the title"
+
         return data[start:end]
 
     @staticmethod
     def write_to_file(filename, names_and_html_urls):
         file = open(filename, "w+")
 
-        paragraph = FileWriter.get_paragraph("README.md")
+        paragraph = FileWriter.get_paragraph("README.md", names_and_html_urls.keys())
 
         # Start of the file:
         file.write(paragraph + "\n > Python Elective II Spring 2019\n\n")
