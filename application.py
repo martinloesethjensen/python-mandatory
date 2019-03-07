@@ -26,6 +26,10 @@ class Committer(object):
     def git_push():
         subprocess.run(args="git push origin master")
 
+    @staticmethod
+    def git_pull():
+        subprocess.run(args="git fetch origin master\ngit pull origin master")
+
 
 class Cloner(object):
 
@@ -121,7 +125,6 @@ class DataFetcher(object):
         names = []
         urls = []
 
-        count = 0
         for key, value in data.items():
             if key != "clone_url":
                 for item in value:
@@ -129,7 +132,6 @@ class DataFetcher(object):
                         names.append(item)
                     else:
                         urls.append(item)
-            count += 1
 
         names_and_html_urls = dict(zip(names, urls))
 
@@ -187,6 +189,7 @@ def main():
     print(os.chdir("../"))
     # Commit to GitHub
     Committer.git_init()
+    Committer.git_pull()
     # cloner.clone_all_repos(clone_urls, data, commit=True)
     Committer.git_add_all()
     Committer.git_add_remote_origin("https://github.com/martinloesethjensen/python-mandatory.git")
