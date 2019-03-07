@@ -28,7 +28,7 @@ class Committer(object):
 
     @staticmethod
     def git_pull():
-        subprocess.run(args="git fetch origin master\ngit pull origin master")
+        subprocess.run(args="git pull")
 
 
 class Cloner(object):
@@ -191,8 +191,8 @@ def main():
     # Committer.git_init()
     # cloner.clone_all_repos(clone_urls, data, commit=True)
     # Committer.git_add_remote_origin("https://github.com/martinloesethjensen/python-mandatory.git")
-    Committer.git_add_all()
     Committer.git_pull()
+    Committer.git_add_all()
     Committer.git_commit("Finished mandatory")
     Committer.git_push()
 
