@@ -62,16 +62,17 @@ class Cloner(object):
         subprocess.run(args="git pull origin master")
         os.chdir("../")
 
-    def clone_all_repos(self, clone_urls, data, commit=False, path=None):
+    def clone_all_repos(self, clone_urls, data_dict, commit=False, path=None):
         count = 0
         for clone_url in clone_urls:
-            self.clone_repo(clone_url=clone_url, name=data['name'][count], commit=commit, path=path)
+            self.clone_repo(clone_url=clone_url, name=data_dict['name'][count], commit=commit, path=path)
             count += 1
 
     @staticmethod
     def path_input():
         path = input(
-            "\nWhere do you want to clone the repos?\n**To clone to current folder just press enter**.\nEnter the whole path: ")
+            "\nWhere do you want to clone the repos?\n"
+            "**To clone to current folder just press enter**.\nEnter the whole path: ")
         folder_ok = 1  # Sentinal for the while loop
 
         # Continue if path is not chosen
@@ -94,17 +95,17 @@ class DataFetcher(object):
     def get_json_data(self):
         try:
             with urllib.request.urlopen(self.url) as response:
-                data = json.load(response)
+                data_json = json.load(response)
         except ConnectionError as con_err:
             print(con_err)
             raise
-        return data
+        return data_json
 
     def get_data_to_text_file(self, filename):
         try:
             with urllib.request.urlopen(self.url) as response:
-                data = open(filename, "w")
-                data.write(str(response.read()))
+                data_file = open(filename, "w")
+                data_file.write(str(response.read()))
         except ConnectionError as con_err:
             print(con_err)
 
@@ -117,8 +118,8 @@ class DataFetcher(object):
             clone_urls = []
             html_urls = []
 
-            data = open(filename, "r")
-            data_string = data.read().split("\"")
+            data_from_file = open(filename, "r")
+            data_string = data_from_file.read().split("\"")
 
             counter = 0
             for item in data_string:
@@ -149,19 +150,19 @@ class DataFetcher(object):
         return data_dict
 
     @staticmethod
-    def get_clone_url_list(data):
-        clone_urls = data['clone_url']
+    def get_clone_url_list(data_dict):
+        clone_urls = data_dict['clone_url']
 
         # Used for json
         # clone_urls = [item['clone_url'] for item in data]
         return clone_urls
 
     @staticmethod
-    def get_names_and_html_urls(data):
+    def get_names_and_html_urls(data_dict):
         names = []
         urls = []
 
-        for key, value in data.items():
+        for key, value in data_dict.items():
             if key != "clone_url":
                 for item in value:
                     if key == "name":
@@ -224,10 +225,10 @@ def main():
     data_fetcher.get_data_to_text_file("data.txt")
 
     print("\nGetting the necessary data from the text file to a dictionary ...")
-    data = data_fetcher.data_from_text_to_dict("data.txt")
+    data_dict = data_fetcher.data_from_text_to_dict("data.txt")
 
     print("\nGet all the clone urls from the dictionary ...")
-    clone_urls = data_fetcher.get_clone_url_list(data)
+    clone_urls = data_fetcher.get_clone_url_list(data_dict)
     # data = data_fetcher.get_json_data()
 
     ###
@@ -236,13 +237,13 @@ def main():
     cloner = Cloner()
     path = cloner.path_input() if cloner.path_input() is not "" else os.getcwd()
     print("\nCloning all the repos in " + path + " ...")
-    cloner.clone_all_repos(clone_urls, data=data, path=path)
+    cloner.clone_all_repos(clone_urls, data_dict=data_dict, path=path)
 
     ###
     # Get names and html urls
     ###
     print("\nGetting the names and urls from the dictionary ..")
-    names_and_html_urls = data_fetcher.get_names_and_html_urls(data)
+    names_and_html_urls = data_fetcher.get_names_and_html_urls(data_dict)
 
     ###
     # Create required_reading.md file
@@ -250,7 +251,7 @@ def main():
     print("\nCreating required_reading.md file ...")
     FileWriter.write_to_file("required_reading.md", names_and_html_urls)
 
-    print("Changing to directory to ./mandatory assignment ... ")
+    print("\nChanging to directory to ./mandatory assignment ... ")
     os.chdir("../")
 
     ###
@@ -260,7 +261,7 @@ def main():
     Committer.git_init()
 
     print("\nAdding submodules for the clone repos ...")
-    cloner.clone_all_repos(clone_urls, data, commit=True)
+    cloner.clone_all_repos(clone_urls, data_dict, commit=True)
 
     print("\nAdded the remote origin to the repo url. It will continue if remote origin already exists... ")
     Committer.git_add_remote_origin("https://github.com/martinloesethjensen/python-mandatory.git")
