@@ -51,9 +51,7 @@ class Cloner(object):
                 subprocess.run(args="git clone " + clone_url)
             os.chdir(application_dir_path)
         elif os.path.exists("./" + name):
-            os.chdir(name)
-            subprocess.run(args="git pull origin master")
-            os.chdir("../")
+            Cloner.if_exists(name)
         else:
             subprocess.run(args="git clone " + clone_url)
 
@@ -93,14 +91,14 @@ class DataFetcher(object):
     def __init__(self, url):
         self.url = url
 
-    def get_json_data(self):
-        try:
-            with urllib.request.urlopen(self.url) as response:
-                data_json = json.load(response)
-        except ConnectionError as con_err:
-            print(con_err)
-            raise
-        return data_json
+    # def get_json_data(self):
+    #     try:
+    #         with urllib.request.urlopen(self.url) as response:
+    #             data_json = json.load(response)
+    #     except ConnectionError as con_err:
+    #         print(con_err)
+    #         raise
+    #     return data_json
 
     def get_data_to_text_file(self, filename):
         try:
