@@ -1,3 +1,4 @@
+import fnmatch
 import json
 import os
 import subprocess
@@ -40,7 +41,7 @@ class Cloner(object):
     @staticmethod
     def clone_repo(clone_url, name, commit=False, path=None):
         if commit:
-            subprocess.run(args="git submodule add " + clone_url)
+            subprocess.run(args="git submodule add " + clone_url + "./" + name)
         elif path is not None and path is not "":
             application_dir_path = os.getcwd()
             os.chdir(path)
@@ -73,7 +74,7 @@ class Cloner(object):
         path = input(
             "\nWhere do you want to clone the repos?\n"
             "**To clone to current folder just press enter**.\nEnter the whole path: ")
-        folder_ok = 1  # Sentinal for the while loop
+        folder_ok = 1  # Sentinel for the while loop
 
         # Continue if path is not chosen
         if path == "":
@@ -182,26 +183,60 @@ class DataFetcher(object):
 class FileWriter(object):
 
     @staticmethod
-    def get_paragraph(filename, names):
+    def get_paragraph(path):
         global data, start, end
-        for name in names:
-            if os.path.exists("./" + name):
-                os.chdir(name)
-                data = open(filename, "r").read()
+
+        matches = FileWriter.get_matches(path=path)
+
+        if len(matches) != 0:
+            for match in matches:
+                data = open(match, "r").read()
                 start = data.find("## Required reading")
                 end = data.find("## Required reading") + len("## Required reading")
-                break
-            else:
-                return "## Couldn't find the title"
+                return data[start:end]
 
-        return data[start:end]
+        return "## Couldn't find the title"
 
     @staticmethod
-    def write_to_file(filename, names_and_html_urls):
+    def get_matches(path):
+        matches = []
+        for root, dir_names, filenames in os.walk(path):
+            for filename in fnmatch.filter(filenames, 'README.md'):
+                matches.append(os.path.join(root, filename))
+        return matches
+
+    @classmethod
+    def get_names_and_links(cls, path=os.getcwd()):
+        matches = FileWriter.get_matches(path=path)
+
+        names_and_urls = {}
+
+        counter = 0
+        for match in matches:
+            if counter != 0:  # to avoid README.md from own folder
+                data_file = open(match, "r").read()
+                if data_file.__contains__("# Mandatory Assignment: Required readings List"):
+                    continue
+                start_index = data_file.find("## Required reading")
+                end_index = start_index + data_file[start_index:].find("### Supplementary reading")
+                string = data_file[start_index:end_index].split("\n")
+
+                for split in string:
+                    if split is not "" and split != "## Required reading":
+                        string_low_and_replace_symbols = split.lower().replace("* [", "").replace(")", "").replace(
+                            "â€”", "-")
+                        split_to_dict = string_low_and_replace_symbols.split("](")
+                        name, url = split_to_dict[0], split_to_dict[1]
+                        names_and_urls[name] = url
+            counter += 1
+        return names_and_urls
+
+    @staticmethod
+    def write_to_file(filename):
         file = open(filename, "w+")
+        paragraph = FileWriter.get_paragraph(path=os.getcwd())
 
-        paragraph = FileWriter.get_paragraph("README.md", names_and_html_urls.keys())
-
+        names_and_html_urls = FileWriter.get_names_and_links(path=os.getcwd())
         # Start of the file:
         file.write(paragraph + "\n > Python Elective II Spring 2019\n\n")
 
@@ -249,15 +284,13 @@ def main():
     # Create required_reading.md file
     ###
     print("\nCreating required_reading.md file ...")
-    FileWriter.write_to_file("required_reading.md", names_and_html_urls)
-
-    print("\nChanging to directory to ./mandatory assignment ... ")
-    os.chdir("../")
+    FileWriter.write_to_file("required_reading.md")
 
     ###
     # Commit to GitHub
     ###
-    print("\nInitializing a .git in your directory ...")
+    directory = os.getcwd()
+    print("\nInitializing a .git in your directory: " + directory + " ...")
     Committer.git_init()
 
     print("\nAdding submodules for the clone repos ...")
