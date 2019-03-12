@@ -39,32 +39,32 @@ class Committer(object):
 class Cloner(object):
 
     @staticmethod
-    def clone_repo(clone_url, name, commit=False, path=None):
-        if commit:
-            subprocess.run(args="git submodule add " + clone_url + "./" + name)
+    def clone_repo(clone_url, folder_name, already_cloned=False, path=None):
+        if already_cloned:
+            subprocess.run(args="git submodule add " + clone_url + "./" + folder_name)
         elif path is not None and path is not "":
             application_dir_path = os.getcwd()
             os.chdir(path)
-            if os.path.exists("./" + name):
-                Cloner.if_exists(name)
+            if os.path.exists("./" + folder_name):
+                Cloner.if_exists(folder_name)
             else:
                 subprocess.run(args="git clone " + clone_url)
             os.chdir(application_dir_path)
-        elif os.path.exists("./" + name):
-            Cloner.if_exists(name)
+        elif os.path.exists("./" + folder_name):
+            Cloner.if_exists(folder_name)
         else:
             subprocess.run(args="git clone " + clone_url)
 
     @staticmethod
-    def if_exists(name):
-        os.chdir(name)
+    def if_exists(folder_name):
+        os.chdir(folder_name)
         subprocess.run(args="git pull origin master")
         os.chdir("../")
 
-    def clone_all_repos(self, clone_urls, data_dict, commit=False, path=None):
+    def clone_all_repos(self, clone_urls, data_dict, already_cloned=False, path=None):
         count = 0
         for clone_url in clone_urls:
-            self.clone_repo(clone_url=clone_url, name=data_dict['name'][count], commit=commit, path=path)
+            self.clone_repo(clone_url=clone_url, folder_name=data_dict['name'][count], already_cloned=already_cloned, path=path)
             count += 1
 
     @staticmethod
@@ -292,7 +292,7 @@ def main():
     Committer.git_init()
 
     print("\nAdding submodules for the clone repos ...")
-    cloner.clone_all_repos(clone_urls, data_dict, commit=True)
+    cloner.clone_all_repos(clone_urls, data_dict, already_cloned=True)
 
     print("\nAdded the remote origin to the repo url. It will continue if remote origin already exists... ")
     Committer.git_add_remote_origin("https://github.com/martinloesethjensen/python-mandatory.git")
