@@ -1,5 +1,4 @@
 import fnmatch
-import json
 import os
 import subprocess
 import urllib.request
